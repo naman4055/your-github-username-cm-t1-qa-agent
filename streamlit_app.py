@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 
 def main():
-    st.title("🔍 CM-T1 QA Agent (Placement ID Matching)")
+    st.set_page_config(page_title="CM-T1 QA Agent", page_icon="🔍")
+    st.title("\U0001F50D CM-T1 QA Agent (Placement ID Matching)")
 
     st.write("Upload the Campaign Legacy Sheet and the T1 Trafficking Sheet")
 
@@ -13,9 +14,9 @@ def main():
         legacy_df = pd.read_excel(legacy_file)
         t1_df = pd.read_excel(t1_file)
 
-        # Standardize column names
+        # Normalize columns: strip spaces and make uppercase
         legacy_df.columns = legacy_df.columns.str.strip().str.upper()
-        t1_df.columns = t1_df.columns.str.strip()
+        t1_df.columns = t1_df.columns.str.strip().str.upper()
 
         mismatches = compare_sheets(legacy_df, t1_df)
 
@@ -25,40 +26,47 @@ def main():
             st.error("Mismatches found!")
             st.dataframe(mismatches)
 
+            csv = mismatches.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📅 Download QA Mismatches as CSV",
+                data=csv,
+                file_name='qa_mismatches.csv',
+                mime='text/csv'
+            )
+
 @st.cache_data
+
 def compare_sheets(legacy_df, t1_df):
-    # Define field mappings
+    # Define field mappings (uppercase)
     mapping = {
-        "Site Name": "SITE NAME",
-        "Placement ID": "PLACEMENT ID",
-        "Placement Name": "PLACEMENT NAME",
-        "Creative Name": "CREATIVE NAME",
-        "Creative Start Date": "CREATIVE START DATE",
-        "Creative End Date": "CREATIVE END DATE",
-        "Creative Type": "CREATIVE TYPE",
-        "Placement Compatibility": "PLACEMENT TYPE",
-        "Dimensions": "DISPLAY DIMENSION",
-        "Placement Duration": "VIDEO DURATION",
-        "Rotation Value": "ROTATION",
-        "Creative Click-Through URL": "FINAL CLICK-THROUGH URL"
+        "SITE NAME": "SITE NAME",
+        "PLACEMENT ID": "PLACEMENT ID",
+        "PLACEMENT NAME": "PLACEMENT NAME",
+        "CREATIVE NAME": "CREATIVE NAME",
+        "CREATIVE START DATE": "CREATIVE START DATE",
+        "CREATIVE END DATE": "CREATIVE END DATE",
+        "CREATIVE TYPE": "CREATIVE TYPE",
+        "PLACEMENT COMPATIBILITY": "PLACEMENT TYPE",
+        "DIMENSIONS": "DISPLAY DIMENSION",
+        "PLACEMENT DURATION": "VIDEO DURATION",
+        "ROTATION VALUE": "ROTATION",
+        "CREATIVE CLICK-THROUGH URL": "FINAL CLICK-THROUGH URL"
     }
 
     results = []
 
-    # Make sure Placement ID is treated as str
-    legacy_df['PLACEMENT ID'] = legacy_df['PLACEMENT ID'].astype(str)
-    t1_df['Placement ID'] = t1_df['Placement ID'].astype(str)
-
+    # Match by Placement ID
     for idx, t1_row in t1_df.iterrows():
-        placement_id = str(t1_row.get('Placement ID', '')).strip()
+        placement_id = str(t1_row.get('PLACEMENT ID', '')).strip()
+
         matching_rows = legacy_df[legacy_df['PLACEMENT ID'] == placement_id]
 
         if not matching_rows.empty:
-            legacy_row = matching_rows.iloc[0]  # Take the first match
+            legacy_row = matching_rows.iloc[0]  # Take first match
 
             for t1_field, legacy_field in mapping.items():
-                t1_value = str(t1_row.get(t1_field, "")).strip()
-                legacy_value = str(legacy_row.get(legacy_field, "")).strip()
+                t1_value = str(t1_row.get(t1_field, '')).strip()
+                legacy_value = str(legacy_row.get(legacy_field, '')).strip()
 
                 qa_status = "✅" if t1_value == legacy_value else "❌"
 
