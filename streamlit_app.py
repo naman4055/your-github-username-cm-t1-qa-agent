@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 def main():
-    st.title(🔍" CM-T1 QA Agent (Placement ID Matching)")
+    st.title("🔍 CM-T1 QA Agent (Placement ID Matching)")
 
     st.write("Upload the Campaign Legacy Sheet and the T1 Trafficking Sheet")
 
@@ -22,7 +22,6 @@ def main():
             st.dataframe(mismatches)
 
 @st.cache_data
-
 def compare_sheets(legacy_df, t1_df):
     # Define field mappings
     mapping = {
@@ -42,7 +41,7 @@ def compare_sheets(legacy_df, t1_df):
 
     results = []
 
-    # Make sure Placement ID is treated as str
+    # Ensure Placement ID is string type
     legacy_df['Placement ID'] = legacy_df['PLACEMENT ID'].astype(str)
     t1_df['Placement ID'] = t1_df['Placement ID'].astype(str)
 
