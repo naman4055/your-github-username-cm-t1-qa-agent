@@ -13,6 +13,10 @@ def main():
         legacy_df = pd.read_excel(legacy_file)
         t1_df = pd.read_excel(t1_file)
 
+        # Standardize column names
+        legacy_df.columns = legacy_df.columns.str.strip().str.upper()
+        t1_df.columns = t1_df.columns.str.strip()
+
         mismatches = compare_sheets(legacy_df, t1_df)
 
         if mismatches.empty:
@@ -41,13 +45,13 @@ def compare_sheets(legacy_df, t1_df):
 
     results = []
 
-    # Ensure Placement ID is string type
-    legacy_df['Placement ID'] = legacy_df['PLACEMENT ID'].astype(str)
+    # Make sure Placement ID is treated as str
+    legacy_df['PLACEMENT ID'] = legacy_df['PLACEMENT ID'].astype(str)
     t1_df['Placement ID'] = t1_df['Placement ID'].astype(str)
 
     for idx, t1_row in t1_df.iterrows():
-        placement_id = str(t1_row['Placement ID'])
-        matching_rows = legacy_df[legacy_df['Placement ID'] == placement_id]
+        placement_id = str(t1_row.get('Placement ID', '')).strip()
+        matching_rows = legacy_df[legacy_df['PLACEMENT ID'] == placement_id]
 
         if not matching_rows.empty:
             legacy_row = matching_rows.iloc[0]  # Take the first match
